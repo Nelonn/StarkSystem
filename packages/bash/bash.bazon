@@ -1,0 +1,27 @@
+# Bash package definition
+pkg("bash", "5.2.15")
+description("The GNU Bourne Again Shell")
+homepage("https://www.gnu.org/software/bash/")
+license("GPL-3.0-or-later")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "ncurses", "readline"])
+optdepends(["bash-completion: for tab completion"])
+provides(["sh"])
+source(["https://ftp.gnu.org/gnu/bash/bash-5.2.15.tar.gz"])
+sha256sums(["83e2164d0e79304f6a5600dbb60ba4fc0c75a9e1450a94aa5f0d24be0e680494"])
+
+prepare = """
+./configure --prefix=/usr \\
+    --with-curses \\
+    --without-bash-malloc \\
+    --enable-readline
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+ln -sf bash "$pkgdir"/usr/bin/sh
+"""

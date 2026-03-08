@@ -1,0 +1,36 @@
+# Mesa package definition
+pkg("mesa", "23.3.3")
+description("An open-source implementation of the OpenGL specification")
+homepage("https://www.mesa3d.org/")
+license("MIT")
+arch(["x86_64", "aarch64"])
+depends(["glibc", "libdrm", "libx11", "libxcb", "libxext", "zlib", "llvm-libs", "libglvnd"])
+optdepends(["opengl-man-pages: for OpenGL API documentation"])
+provides(["libGL.so", "libEGL.so", "libGLESv2.so", "libgbm.so"])
+source(["https://archive.mesa3d.org/mesa-23.3.3.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    --sysconfdir=/etc \
+    -Dgallium-drivers=swrast,radeonsi,r600,nouveau,i915,iris,crocus,nouveau \
+    -Dvulkan-drivers=amd,intel,swrast \
+    -Degl=enabled \
+    -Dgbm=enabled \
+    -Dgles1=enabled \
+    -Dgles2=enabled \
+    -Dglx=dri \
+    -Dopengl=true \
+    -Dopencl=disabled \
+    -Dgallium-vdpau=enabled \
+    -Dgallium-xa=enabled \
+    -Dplatforms=x11,wayland,surfaceless
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""

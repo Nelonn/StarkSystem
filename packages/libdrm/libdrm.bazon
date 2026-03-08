@@ -1,0 +1,26 @@
+# Libdrm package definition
+pkg("libdrm", "2.4.120")
+description("Userspace interface to kernel DRM services")
+homepage("https://dri.freedesktop.org/")
+license("MIT")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "libpciaccess"])
+source(["https://dri.freedesktop.org/libdrm/libdrm-2.4.120.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    -Dudev=true \
+    -Dcairo-tests=disabled \
+    -Dvalgrind=disabled
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""

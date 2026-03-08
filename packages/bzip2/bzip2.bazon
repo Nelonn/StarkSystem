@@ -1,0 +1,21 @@
+# Bzip2 package definition
+pkg("bzip2", "1.0.8")
+description("A high-quality data compressor")
+homepage("https://sourceware.org/bzip2/")
+license("bzip2-1.0.6")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc"])
+provides(["libbz2.so"])
+source(["https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"])
+sha256sums(["ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"])
+
+build = """
+make -f Makefile-libbz2_so
+make clean
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+make DESTDIR="$pkgdir" -f Makefile-libbz2_so install
+"""

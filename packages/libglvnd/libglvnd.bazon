@@ -1,0 +1,25 @@
+# Libglvnd package definition
+pkg("libglvnd", "1.7.0")
+description("The GL Vendor-Neutral Dispatch library")
+homepage("https://gitlab.freedesktop.org/glvnd/libglvnd")
+license("MIT")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "libx11", "libxext"])
+provides(["libGL.so", "libEGL.so", "libGLESv2.so"])
+source(["https://gitlab.freedesktop.org/glvnd/libglvnd/-/archive/v1.7.0/libglvnd-1.7.0.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    --sysconfdir=/etc \
+    -Dasm=enabled \
+    -Dx11=enabled
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""

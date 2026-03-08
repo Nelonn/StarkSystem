@@ -1,0 +1,24 @@
+# Coreutils package definition
+pkg("coreutils", "9.4")
+description("The basic file, shell and text manipulation utilities of the GNU operating system")
+homepage("https://www.gnu.org/software/coreutils/")
+license("GPL-3.0-or-later")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "acl", "attr", "gmp", "libcap", "openssl"])
+optdepends(["perl: for sort and sort-related utilities"])
+source(["https://ftp.gnu.org/gnu/coreutils/coreutils-9.4.tar.xz"])
+sha256sums(["ea61f16c85b2a30013a06a2c9a6b7c4d1e0a0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+./configure --prefix=/usr \
+    --enable-no-install-program=kill,uptime \
+    --enable-install-program=su
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+"""

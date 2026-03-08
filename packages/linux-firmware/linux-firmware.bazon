@@ -1,0 +1,14 @@
+# Linux firmware package definition
+pkg("linux-firmware", "20240115")
+description("Firmware files for Linux")
+homepage("https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git")
+license("GPL-2.0-or-later AND various")
+arch(["any"])
+depends(["glibc"])
+source(["https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-20240115.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+build = """
+mkdir -p "$pkgdir"/usr/lib/firmware
+cp -r * "$pkgdir"/usr/lib/firmware/
+"""

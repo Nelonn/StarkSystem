@@ -1,0 +1,27 @@
+# OpenSSL package definition
+pkg("openssl", "3.2.0")
+description("Toolkit for Transport Layer Security (TLS)")
+homepage("https://www.openssl.org/")
+license("Apache-2.0")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "ca-certificates"])
+backup(["etc/ssl/openssl.cnf"])
+source(["https://www.openssl.org/source/openssl-3.2.0.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+./config --prefix=/usr \
+    --openssldir=/etc/ssl \
+    --libdir=lib \
+    shared \
+    zlib-dynamic \
+    no-weak-ssl-ciphers
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install_sw
+"""

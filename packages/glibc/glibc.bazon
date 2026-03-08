@@ -1,0 +1,35 @@
+# GLibc package definition
+pkg("glibc", "2.38")
+description("GNU C Library")
+homepage("https://www.gnu.org/software/libc/")
+license("GPL-2.0-only WITH Linux-syscall-note OR LGPL-2.1-only")
+arch(["x86_64", "aarch64", "i686"])
+depends(["linux-api-headers>=5.10"])
+backup(["etc/ld.so.conf", "etc/nsswitch.conf"])
+source([
+    "https://ftp.gnu.org/gnu/glibc/glibc-2.38.tar.xz",
+])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+mkdir -p build
+cd build
+../configure --prefix=/usr \
+    --disable-werror \
+    --enable-bind-now \
+    --enable-kernel=4.4 \
+    --enable-nss-crypt \
+    --with-headers=/usr/include \
+    --libexecdir=/usr/lib \
+    --libdir=/usr/lib
+"""
+
+build = """
+cd build
+make
+"""
+
+package = """
+cd build
+make install_root="$pkgdir" install
+"""

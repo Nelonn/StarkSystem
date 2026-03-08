@@ -1,0 +1,25 @@
+# dhcpcd package definition
+pkg("dhcpcd", "10.0.6")
+description("A lightweight, fast and RFC compliant DHCPv4/IPv6 client")
+homepage("https://roy.marples.name/projects/dhcpcd")
+license("ISC")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc"])
+backup(["etc/dhcpcd.conf"])
+source(["https://github.com/NetworkConfiguration/dhcpcd/releases/download/v10.0.6/dhcpcd-10.0.6.tar.xz"])
+sha256sums(["8a5c8e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+./configure --prefix=/usr \
+    --sysconfdir=/etc \
+    --libexecdir=/usr/lib \
+    --dbpath=/var/lib/dhcpcd
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+"""

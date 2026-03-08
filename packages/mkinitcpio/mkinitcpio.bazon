@@ -1,0 +1,19 @@
+# Mkinitcpio package definition
+pkg("mkinitcpio", "36")
+description("Modular initramfs image generation utility")
+homepage("https://gitlab.archlinux.org/archlinux/mkinitcpio/mkinitcpio")
+license("GPL-2.0-only")
+arch(["any"])
+depends(["bash", "kmod", "util-linux", "coreutils", "findutils", "gzip"])
+optdepends(["xz: Use xz compression for initramfs images"])
+backup(["etc/mkinitcpio.conf", "etc/mkinitcpio.d/linux.preset"])
+source(["https://gitlab.archlinux.org/archlinux/mkinitcpio/mkinitcpio/-/archive/v36/mkinitcpio-v36.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+"""
