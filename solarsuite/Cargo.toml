@@ -1,0 +1,19 @@
+[package]
+name = "solarsuite"
+version = "0.1.0"
+edition = "2021"
+description = "Solar Suite - Starlark-based package definition interpreter"
+license = "MIT"
+
+[dependencies]
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "1.0"
+
+# Note: Full starlark-rust integration can be added later
+# For now, we use a simplified Starlark-like syntax parser
+# starlark = "0.13"
+# starlark_derive = "0.13"
