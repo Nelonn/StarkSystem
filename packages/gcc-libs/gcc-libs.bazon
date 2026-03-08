@@ -1,0 +1,18 @@
+# GCC libs package definition
+pkg("gcc-libs", "13.2.1")
+description = "The GNU Compiler Collection libraries"
+homepage = "https://gcc.gnu.org/"
+license = "GPL-3.0-only WITH GCC-exception-3.1"
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc>=2.38"])
+provides(["libgcc.so", "libstdc++.so", "libgomp.so"])
+source(["https://ftp.gnu.org/gnu/gcc/gcc-13.2.1/gcc-13.2.1.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+build = """
+# GCC libs are typically built as part of the full GCC build
+# This is a simplified package definition
+mkdir -p "$pkgdir"/usr/lib
+cp -a lib/gcc/* "$pkgdir"/usr/lib/
+cp -a lib64/* "$pkgdir"/usr/lib/ 2>/dev/null || true
+"""

@@ -1,0 +1,31 @@
+# Xwayland package definition
+pkg("xwayland", "23.2.3")
+description("Xwayland: X server for running X clients under Wayland")
+homepage("https://www.x.org/")
+license("MIT")
+arch(["x86_64", "aarch64"])
+depends(["glibc", "libx11", "libxkbfile", "libegl", "libgbm", "wayland", "pixman", "fontconfig"])
+optdepends(["xorg-xset: X11 settings", "xorg-xrandr: screen resolution settings"])
+source(["https://www.x.org/releases/individual/xserver/xserver-23.2.3.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    -Dxwayland=true \
+    -Dxvfb=true \
+    -Dxnest=true \
+    -Dxephyr=true \
+    -Ddmx=false \
+    -Dxwin=false \
+    -Dxquartz=false \
+    -Dsystemd_logind=enabled \
+    -Dudev=enabled
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""

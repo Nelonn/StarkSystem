@@ -1,0 +1,36 @@
+# Kmod package definition
+pkg("kmod", "31")
+description = "Linux kernel module management tools"
+homepage = "https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git"
+license = "GPL-2.0-or-later AND LGPL-2.1-or-later"
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "zlib", "xz", "zstd"])
+provides(["module-init-tools", "kmod-tools"])
+conflicts(["module-init-tools"])
+replaces(["module-init-tools"])
+backup(["etc/depmod.d/kmod.conf"])
+source(["https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-31.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+./configure --prefix=/usr \
+    --sysconfdir=/etc \
+    --with-rootlibdir=/usr/lib \
+    --with-xz \
+    --with-zlib \
+    --with-zstd
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+ln -sf kmod "$pkgdir"/usr/bin/lsmod
+ln -sf kmod "$pkgdir"/usr/bin/insmod
+ln -sf kmod "$pkgdir"/usr/bin/rmmod
+ln -sf kmod "$pkgdir"/usr/bin/modinfo
+ln -sf kmod "$pkgdir"/usr/bin/modprobe
+ln -sf kmod "$pkgdir"/usr/bin/depmod
+"""

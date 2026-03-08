@@ -1,0 +1,30 @@
+# D-Bus package definition
+pkg("dbus", "1.14.10")
+description = "A message bus system, a simple way for applications to talk to one another"
+homepage = "https://www.freedesktop.org/wiki/Software/dbus"
+license = "AFL-2.1 OR GPL-2.0-or-later"
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "systemd-libs", "expat"])
+optdepends(["dbus-docs: for documentation"])
+backup(["etc/dbus-1/system.conf", "etc/dbus-1/session.conf"])
+source(["https://dbus.freedesktop.org/releases/dbus/dbus-1.14.10.tar.xz"])
+sha256sums(["06f2490f9213845f16a06f62a8a343d72190d8f2c9fe05a5078e584f243608a7"])
+
+prepare = """
+./configure --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --runstatedir=/run \
+    --enable-user-session \
+    --disable-static \
+    --disable-doxygen-docs
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+ln -sf /etc/machine-id "$pkgdir"/var/lib/dbus/machine-id
+"""

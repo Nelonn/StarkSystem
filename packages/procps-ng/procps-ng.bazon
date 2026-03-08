@@ -1,0 +1,26 @@
+# Procps-ng package definition
+pkg("procps-ng", "4.0.4")
+description("Utilities for monitoring your system and its processes")
+homepage("https://gitlab.com/procps-ng/procps")
+license("GPL-2.0-only AND LGPL-2.0-or-later")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "ncurses", "systemd-libs"])
+source(["https://gitlab.com/procps-ng/procps/-/archive/v4.0.4/procps-v4.0.4.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+./autogen.sh
+./configure --prefix=/usr \
+    --sysconfdir=/etc \
+    --libdir=/usr/lib \
+    --disable-static \
+    --disable-w
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+"""

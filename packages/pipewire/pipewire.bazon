@@ -1,0 +1,31 @@
+# Pipewire package definition
+pkg("pipewire", "1.0.0")
+description("Low-latency audio/video router and processor")
+homepage("https://www.pipewire.org/")
+license("MIT")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "dbus", "systemd-libs", "libpulse", "ffmpeg", "libcamera"])
+optdepends(["pipewire-alsa: ALSA configuration", "pipewire-jack: JACK support"])
+backup(["etc/pipewire/pipewire.conf"])
+source(["https://github.com/PipeWire/pipewire/releases/download/1.0.0/pipewire-1.0.0.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    --sysconfdir=/etc \
+    -Dpipewire-alsa=enabled \
+    -Dpipewire-jack=enabled \
+    -Dpipewire-pulse=enabled \
+    -Dwireplumber=enabled \
+    -Dsession-managers=wireplumber \
+    -Dlibcamera=enabled \
+    -Dffmpeg=enabled
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""

@@ -1,0 +1,63 @@
+# Example Solar package definition using Starlark
+# This file demonstrates the Starlark-based package declaration syntax
+
+# Define the package with name and version
+pkg("example-package", "1.0.0")
+
+# Package metadata
+description = "An example package demonstrating Starlark-based package definitions"
+homepage = "https://github.com/example/example-package"
+license = "MIT"
+
+# Supported architectures
+arch(["x86_64", "aarch64"])
+
+# Package dependencies
+depends([
+    "glibc",
+    "gcc-libs",
+])
+
+# Optional dependencies
+optdepends([
+    "python: for Python script support",
+    "bash: for shell completion",
+])
+
+# Package conflicts
+conflicts(["old-package"])
+
+# Virtual packages this provides
+provides(["example-lib"])
+
+# Packages this replaces
+replaces(["legacy-package"])
+
+# Source files (URLs or local paths)
+source([
+    "https://github.com/example/example-package/archive/v1.0.0.tar.gz",
+])
+
+# SHA256 checksums for source files
+sha256sums([
+    "abc123def456789012345678901234567890123456789012345678901234abcd",
+])
+
+# Prepare script - runs before build (e.g., patching, configuration)
+prepare = """
+cd example-package-1.0.0
+./configure --prefix=/usr
+"""
+
+# Build script - compiles the package
+build = """
+cd example-package-1.0.0
+make -j$(nproc)
+"""
+
+# Package script - installs files into the package directory
+package = """
+cd example-package-1.0.0
+make DESTDIR="$pkgdir" install
+install -Dm644 LICENSE "$pkgdir/usr/share/licenses/example-package/LICENSE"
+"""

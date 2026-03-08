@@ -1,0 +1,42 @@
+# Systemd package definition
+pkg("systemd", "255")
+description("System and service manager")
+homepage("https://systemd.io/")
+license("GPL-2.0-or-later AND LGPL-2.1-or-later")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "acl", "attr", "dbus", "libcap", "libxcrypt", "openssl", "zlib", "xz", "zstd"])
+optdepends(["cryptsetup: encrypted block devices", "iptables: firewall support"])
+backup(["etc/systemd/journald.conf", "etc/systemd/logind.conf", "etc/systemd/networkd.conf", "etc/systemd/resolved.conf", "etc/systemd/timesyncd.conf"])
+source(["https://github.com/systemd/systemd/archive/v255/systemd-255.tar.gz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    -Dmode=release \
+    -Ddefault-dnssec=no \
+    -Dfirstboot=false \
+    -Dinstall-tests=false \
+    -Dldconfig=false \
+    -Dsysusers=false \
+    -Drandomseed=false \
+    -Dbacklight=false \
+    -Dvconsole=false \
+    -Dquotacheck=false \
+    -Duserdb=false \
+    -Dhomed=false \
+    -Dlocalectld=false \
+    -Dmyhostname=false \
+    -Dpam=false \
+    -Dpolkit=false \
+    -Defi=false
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""

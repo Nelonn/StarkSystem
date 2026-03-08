@@ -1,0 +1,30 @@
+# Shadow package definition
+pkg("shadow", "4.14.2")
+description("Password and account management utilities")
+homepage("https://github.com/shadow-maint/shadow")
+license("BSD-3-Clause AND GPL-2.0-only")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "acl", "attr", "pam"])
+backup(["etc/login.defs", "etc/pam.d/other"])
+source(["https://github.com/shadow-maint/shadow/releases/download/4.14.2/shadow-4.14.2.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+./configure --prefix=/usr \
+    --sysconfdir=/etc \
+    --disable-static \
+    --with-libpam \
+    --with-acl \
+    --with-attr \
+    --with-yaml \
+    --enable-subid \
+    --disable-man
+"""
+
+build = """
+make
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+"""

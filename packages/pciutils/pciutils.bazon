@@ -1,0 +1,21 @@
+# Pciutils package definition
+pkg("pciutils", "3.10.0")
+description("PCI bus utilities")
+homepage("https://mj.ucw.cz/sw/pciutils/")
+license("GPL-2.0-only")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc"])
+optdepends(["dnsutils: for pci-db lookup"])
+source(["https://www.kernel.org/pub/software/utils/pciutils/pciutils-3.10.0.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+build = """
+make PREFIX=/usr \
+    SHARED=yes \
+    IDSDIR=/usr/share/hwdata \
+    all
+"""
+
+package = """
+make DESTDIR="$pkgdir" install
+"""

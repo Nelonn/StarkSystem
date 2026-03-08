@@ -1,0 +1,33 @@
+# NetworkManager package definition
+pkg("networkmanager", "1.46.0")
+description("Network connection manager and user applications")
+homepage("https://wiki.gnome.org/Projects/NetworkManager")
+license("GPL-2.0-or-later AND LGPL-2.1-or-later")
+arch(["x86_64", "aarch64", "i686"])
+depends(["glibc", "glib2", "dbus", "systemd-libs", "iptables", "nftables", "wpa_supplicant", "dhcpcd"])
+optdepends(["network-manager-applet: GUI applet", "modemmanager: cellular mobile broadband support"])
+backup(["etc/NetworkManager/NetworkManager.conf"])
+source(["https://download.gnome.org/sources/NetworkManager/1.46/NetworkManager-1.46.0.tar.xz"])
+sha256sums(["0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e"])
+
+prepare = """
+meson setup build --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    -Dsystemd_journal=true \
+    -Ddbus_conf_dir=/etc/dbus-1/system.d \
+    -Dsession_tracking=true \
+    -Dconcheck=enabled \
+    -Dmodem_manager=enabled \
+    -Dteam=enabled \
+    -Dovs=disabled \
+    -Dselinux=disabled
+"""
+
+build = """
+ninja -C build
+"""
+
+package = """
+DESTDIR="$pkgdir" ninja -C build install
+"""
