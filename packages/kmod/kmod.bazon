@@ -1,8 +1,8 @@
 # Kmod package definition
 pkg("kmod", "31")
-description("Linux kernel module management tools")
-homepage("https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git")
-license("GPL-2.0-or-later AND LGPL-2.1-or-later")
+description = "Linux kernel module management tools"
+homepage = "https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git"
+license = "GPL-2.0-or-later AND LGPL-2.1-or-later"
 arch(["x86_64", "aarch64", "i686"])
 depends(["glibc", "zlib", "xz", "zstd"])
 provides(["module-init-tools", "kmod-tools"])
