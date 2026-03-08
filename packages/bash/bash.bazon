@@ -1,8 +1,8 @@
 # Bash package definition
 pkg("bash", "5.2.15")
-description("The GNU Bourne Again Shell")
-homepage("https://www.gnu.org/software/bash/")
-license("GPL-3.0-or-later")
+description = "The GNU Bourne Again Shell"
+homepage = "https://www.gnu.org/software/bash/"
+license = "GPL-3.0-or-later"
 arch(["x86_64", "aarch64", "i686"])
 depends(["glibc", "ncurses", "readline"])
 optdepends(["bash-completion: for tab completion"])

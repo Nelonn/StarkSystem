@@ -79,26 +79,26 @@ Packages are defined using `solar.lua` files with Starlark syntax:
 
 ```python
 pkg("bash", "5.2.15")
-description("The GNU Bourne Again Shell")
-homepage("https://www.gnu.org/software/bash/")
-license("GPL-3.0-or-later")
+description = "The GNU Bourne Again Shell"
+homepage = "https://www.gnu.org/software/bash/"
+license = "GPL-3.0-or-later"
 arch(["x86_64", "aarch64"])
 depends(["glibc", "ncurses", "readline"])
 source(["https://ftp.gnu.org/gnu/bash/bash-5.2.15.tar.gz"])
 sha256sums(["abc123..."])
 
-prepare("""
+prepare = """
     # Prepare build environment
     ./configure --prefix=/usr
-""")
+"""
 
-build("""
+build = """
     make
-""")
+"""
 
-package("""
+package = """
     make install
-""")
+"""
 ```
 
 ## Project Structure

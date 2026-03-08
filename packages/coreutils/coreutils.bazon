@@ -1,8 +1,8 @@
 # Coreutils package definition
 pkg("coreutils", "9.4")
-description("The basic file, shell and text manipulation utilities of the GNU operating system")
-homepage("https://www.gnu.org/software/coreutils/")
-license("GPL-3.0-or-later")
+description = "The basic file, shell and text manipulation utilities of the GNU operating system"
+homepage = "https://www.gnu.org/software/coreutils/"
+license = "GPL-3.0-or-later"
 arch(["x86_64", "aarch64", "i686"])
 depends(["glibc", "acl", "attr", "gmp", "libcap", "openssl"])
 optdepends(["perl: for sort and sort-related utilities"])

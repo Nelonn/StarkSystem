@@ -12,3 +12,8 @@ serde_json = "1.0"
 
 # Error handling
 thiserror = "1.0"
+anyhow = "1.0"
+
+# Starlark parser
+starlark = "0.13"
+starlark_syntax = "0.13"

@@ -1,242 +1,211 @@
-//! Starlark dialect for Solar package definitions
+//! Starlark dialect interpreter for Solar package definitions
 //!
-//! This module provides a simple parser for Starlark-like package definitions.
-//! The full starlark-rust integration can be added later.
+//! This module uses starlark-rust's AST parsing to interpret .bazon files.
 
-use crate::package::PackageDef;
+use crate::package::PackageContext;
+use starlark::syntax::{AstModule, Dialect};
+use starlark_syntax::syntax::module::AstModuleFields;
+use starlark_syntax::syntax::ast::{AstExpr, AstStmt, AstLiteral};
 
-/// Context for building a package definition
-#[derive(Debug, Clone, Default)]
-pub struct PackageContext {
-    pkg: PackageDef,
+/// Extract string content from a Starlark expression
+fn extract_string(expr: &AstExpr) -> Option<String> {
+    match &expr.node {
+        starlark_syntax::syntax::ast::ExprP::Literal(AstLiteral::String(s)) => Some(s.node.clone()),
+        _ => None,
+    }
 }
 
-impl PackageContext {
-    pub fn new() -> Self {
-        Self {
-            pkg: PackageDef::default(),
+/// Extract list of strings from a Starlark expression
+fn extract_string_list(expr: &AstExpr) -> Vec<String> {
+    match &expr.node {
+        starlark_syntax::syntax::ast::ExprP::List(list) => {
+            list.iter()
+                .filter_map(|e| extract_string(e))
+                .collect()
         }
-    }
-
-    pub fn into_package(self) -> PackageDef {
-        self.pkg
+        _ => Vec::new(),
     }
 }
 
-/// Simple Starlark parser for Solar package definitions
+/// Parse a function call expression
+fn parse_call(expr: &AstExpr) -> Option<(&str, Vec<&AstExpr>)> {
+    match &expr.node {
+        starlark_syntax::syntax::ast::ExprP::Call(func, args) => {
+            if let starlark_syntax::syntax::ast::ExprP::Identifier(ident) = &func.node {
+                let arg_exprs: Vec<&AstExpr> = args.args.iter()
+                    .filter_map(|a| match &a.node {
+                        starlark_syntax::syntax::ast::ArgumentP::Positional(expr) => Some(expr),
+                        _ => None,
+                    })
+                    .collect();
+                Some((ident.ident.as_str(), arg_exprs))
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Parse an assignment statement (name = value)
+fn parse_assignment(stmt: &AstStmt) -> Option<(&str, &AstExpr)> {
+    match &stmt.node {
+        starlark_syntax::syntax::ast::StmtP::Assign(assign) => {
+            match &assign.lhs.node {
+                starlark_syntax::syntax::ast::AssignTargetP::Identifier(ident) => {
+                    Some((ident.ident.as_str(), &assign.rhs))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Starlark parser for Solar package definitions
 pub struct StarlarkParser;
 
 impl StarlarkParser {
-    /// Parse Starlark content, returning the package definition
-    pub fn parse(content: &str) -> Result<PackageDef, String> {
-        let mut pkg = PackageDef::default();
+    /// Parse Starlark content using starlark-rust AST
+    pub fn parse(content: &str, filepath: &str) -> Result<PackageContext, String> {
+        // Parse the Starlark code using starlark-rust
+        let ast = AstModule::parse(
+            filepath,
+            content.to_string(),
+            &Dialect::Extended,
+        ).map_err(|e| format!("Parse error: {}", e))?;
 
-        // Simple line-by-line parsing for Starlark-like syntax
-        for line in content.lines() {
-            let line = line.trim();
+        let mut ctx = PackageContext::new();
 
-            // Skip empty lines and comments
-            if line.is_empty() || line.starts_with('#') {
-                continue;
-            }
+        // Process each statement in the module
+        Self::process_stmt(&mut ctx, ast.statement());
 
-            // Parse pkg("name", "version") call
-            if let Some((name, version)) = Self::parse_pkg_call(line) {
-                pkg.name = name;
-                pkg.version = version;
-                continue;
-            }
-
-            // Parse description() call
-            if let Some(value) = Self::parse_string_func(line, "description") {
-                pkg.description = Some(value);
-                continue;
-            }
-
-            // Parse homepage() call
-            if let Some(value) = Self::parse_string_func(line, "homepage") {
-                pkg.homepage = Some(value);
-                continue;
-            }
-
-            // Parse license() call
-            if let Some(value) = Self::parse_string_func(line, "license") {
-                pkg.license = Some(value);
-                continue;
-            }
-
-            // Parse arch() call
-            if let Some(value) = Self::parse_list_func(line, "arch") {
-                pkg.arch = value;
-                continue;
-            }
-
-            // Parse depends() call
-            if let Some(value) = Self::parse_list_func(line, "depends") {
-                pkg.depends = value;
-                continue;
-            }
-
-            // Parse optdepends() call
-            if let Some(value) = Self::parse_list_func(line, "optdepends") {
-                pkg.optdepends = value;
-                continue;
-            }
-
-            // Parse conflicts() call
-            if let Some(value) = Self::parse_list_func(line, "conflicts") {
-                pkg.conflicts = value;
-                continue;
-            }
-
-            // Parse provides() call
-            if let Some(value) = Self::parse_list_func(line, "provides") {
-                pkg.provides = value;
-                continue;
-            }
-
-            // Parse replaces() call
-            if let Some(value) = Self::parse_list_func(line, "replaces") {
-                pkg.replaces = value;
-                continue;
-            }
-
-            // Parse backup() call
-            if let Some(value) = Self::parse_list_func(line, "backup") {
-                pkg.backup = value;
-                continue;
-            }
-
-            // Parse source() call
-            if let Some(value) = Self::parse_list_func(line, "source") {
-                pkg.source = value;
-                continue;
-            }
-
-            // Parse sha256sums() call
-            if let Some(value) = Self::parse_list_func(line, "sha256sums") {
-                pkg.sha256sums = value;
-                continue;
-            }
-
-            // Parse prepare = "..." or prepare = """..."""
-            if let Some(value) = Self::parse_assignment(line, content, "prepare") {
-                pkg.prepare = Some(value);
-                continue;
-            }
-
-            // Parse build = "..." or build = """..."""
-            if let Some(value) = Self::parse_assignment(line, content, "build") {
-                pkg.build = Some(value);
-                continue;
-            }
-
-            // Parse package = "..." or package = """..."""
-            if let Some(value) = Self::parse_assignment(line, content, "package") {
-                pkg.package = Some(value);
-                continue;
-            }
-        }
-
-        if pkg.name.is_empty() || pkg.version.is_empty() {
-            return Err("Package must have name and version".to_string());
-        }
-
-        Ok(pkg)
+        Ok(ctx)
     }
 
-    /// Parse pkg("name", "version") call
-    fn parse_pkg_call(line: &str) -> Option<(String, String)> {
-        if !line.starts_with("pkg(") {
-            return None;
+    /// Process a statement
+    fn process_stmt(ctx: &mut PackageContext, stmt: &AstStmt) {
+        // Check for expression statements (function calls)
+        if let starlark_syntax::syntax::ast::StmtP::Expression(expr) = &stmt.node {
+            Self::process_call(ctx, expr);
+            return;
         }
 
-        let inner = line.strip_prefix("pkg(")?.strip_suffix(')')?;
-        let parts: Vec<&str> = inner.split(',').collect();
+        // Check for assignments (prepare = "...", build = "...", etc.)
+        if let Some((name, value)) = parse_assignment(stmt) {
+            Self::process_assignment(ctx, name, value);
+        }
 
-        if parts.len() >= 2 {
-            let name = parts[0].trim().trim_matches('"').trim_matches('\'').to_string();
-            let version = parts[1].trim().trim_matches('"').trim_matches('\'').to_string();
-            Some((name, version))
-        } else {
-            None
+        // Handle nested statements
+        if let starlark_syntax::syntax::ast::StmtP::Statements(stmts) = &stmt.node {
+            for s in stmts {
+                Self::process_stmt(ctx, s);
+            }
         }
     }
 
-    /// Parse function with single string argument: func("value")
-    fn parse_string_func(line: &str, func_name: &str) -> Option<String> {
-        let prefix = format!("{}(", func_name);
-        if !line.starts_with(&prefix) {
-            return None;
-        }
-
-        let inner = line.strip_prefix(&prefix)?.strip_suffix(')')?;
-        Some(inner.trim().trim_matches('"').trim_matches('\'').to_string())
-    }
-
-    /// Parse function with list argument: func(["a", "b", "c"])
-    fn parse_list_func(line: &str, func_name: &str) -> Option<Vec<String>> {
-        let prefix = format!("{}(", func_name);
-        if !line.starts_with(&prefix) {
-            return None;
-        }
-
-        let inner = line.strip_prefix(&prefix)?.strip_suffix(')')?;
-        let inner = inner.trim().trim_start_matches('[').trim_end_matches(']');
-
-        let mut result = Vec::new();
-        for item in inner.split(',') {
-            let item = item.trim().trim_matches('"').trim_matches('\'');
-            if !item.is_empty() {
-                result.push(item.to_string());
+    /// Process a metadata assignment (description = "...", etc.)
+    fn process_metadata_assignment(ctx: &mut PackageContext, name: &str, value: &AstExpr) {
+        if let Some(text) = extract_string(value) {
+            match name {
+                "description" => ctx.set_description(text),
+                "homepage" => ctx.set_homepage(text),
+                "license" => ctx.set_license(text),
+                _ => {}
             }
         }
-
-        Some(result)
     }
 
-    /// Parse multiline string assignment: func = "..." or func = """..."""
-    fn parse_assignment(line: &str, content: &str, func_name: &str) -> Option<String> {
-        let prefix = format!("{} =", func_name);
-        if !line.starts_with(&prefix) {
-            return None;
-        }
-
-        let value_part = line.strip_prefix(&prefix)?.trim();
-
-        // Handle triple-quoted strings (multiline)
-        if value_part.starts_with("\"\"\"") {
-            // Check if it's a single-line triple-quoted string
-            if let Some(rest) = value_part.strip_prefix("\"\"\"") {
-                if let Some(end_idx) = rest.find("\"\"\"") {
-                    return Some(rest[..end_idx].to_string());
-                }
-                // Multiline: find the closing """ in the content
-                let line_start = content.find(line)?;
-                let search_start = line_start + line.len();
-                if let Some(rest_content) = content.get(search_start..) {
-                    if let Some(end_idx) = rest_content.find("\"\"\"") {
-                        let script = rest_content[..end_idx].trim().to_string();
-                        // Remove leading/trailing newlines and common indentation
-                        return Some(script.lines()
-                            .skip_while(|l| l.trim().is_empty())
-                            .map(|l| l.trim_start())
-                            .collect::<Vec<_>>()
-                            .join("\n"));
+    /// Process a function call
+    fn process_call(ctx: &mut PackageContext, expr: &AstExpr) {
+        if let Some((func_name, args)) = parse_call(expr) {
+            match func_name {
+                "pkg" => {
+                    if args.len() >= 2 {
+                        if let (Some(name), Some(version)) = 
+                            (extract_string(args[0]), extract_string(args[1])) {
+                            ctx.pkg(name, version);
+                        }
                     }
                 }
+                "description" => {
+                    if let Some(text) = args.first().and_then(|a| extract_string(a)) {
+                        ctx.set_description(text);
+                    }
+                }
+                "homepage" => {
+                    if let Some(url) = args.first().and_then(|a| extract_string(a)) {
+                        ctx.set_homepage(url);
+                    }
+                }
+                "license" => {
+                    if let Some(lic) = args.first().and_then(|a| extract_string(a)) {
+                        ctx.set_license(lic);
+                    }
+                }
+                "arch" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_arch(extract_string_list(arg));
+                    }
+                }
+                "depends" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_depends(extract_string_list(arg));
+                    }
+                }
+                "optdepends" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_optdepends(extract_string_list(arg));
+                    }
+                }
+                "conflicts" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_conflicts(extract_string_list(arg));
+                    }
+                }
+                "provides" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_provides(extract_string_list(arg));
+                    }
+                }
+                "replaces" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_replaces(extract_string_list(arg));
+                    }
+                }
+                "backup" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_backup(extract_string_list(arg));
+                    }
+                }
+                "source" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_source(extract_string_list(arg));
+                    }
+                }
+                "sha256sums" => {
+                    if let Some(arg) = args.first() {
+                        ctx.set_sha256sums(extract_string_list(arg));
+                    }
+                }
+                _ => {}
             }
         }
+    }
 
-        // Handle single-quoted strings
-        if value_part.starts_with('"') && value_part.ends_with('"') {
-            return value_part.strip_prefix('"')?.strip_suffix('"').map(|s| s.to_string());
+    /// Process an assignment (for multiline strings)
+    fn process_assignment(ctx: &mut PackageContext, name: &str, value: &AstExpr) {
+        // First check for metadata assignments (description, homepage, license)
+        Self::process_metadata_assignment(ctx, name, value);
+        
+        // Then check for script assignments (prepare, build, package)
+        if let Some(script) = extract_string(value) {
+            match name {
+                "prepare" => ctx.set_prepare(script),
+                "build" => ctx.set_build(script),
+                "package" => ctx.set_package(script),
+                _ => {}
+            }
         }
-
-        if value_part.starts_with('\'') && value_part.ends_with('\'') {
-            return value_part.strip_prefix('\'')?.strip_suffix('\'').map(|s| s.to_string());
-        }
-
-        None
     }
 }

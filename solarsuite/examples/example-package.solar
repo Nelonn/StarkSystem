@@ -5,9 +5,9 @@
 pkg("example-package", "1.0.0")
 
 # Package metadata
-description("An example package demonstrating Starlark-based package definitions")
-homepage("https://github.com/example/example-package")
-license("MIT")
+description = "An example package demonstrating Starlark-based package definitions"
+homepage = "https://github.com/example/example-package"
+license = "MIT"
 
 # Supported architectures
 arch(["x86_64", "aarch64"])

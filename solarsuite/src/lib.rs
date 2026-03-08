@@ -10,7 +10,7 @@
 //! use std::path::Path;
 //!
 //! let suite = SolarSuite::new().unwrap();
-//! let pkg = suite.parse_file(Path::new("package.solar")).unwrap();
+//! let pkg = suite.parse_file(Path::new("package.bazon")).unwrap();
 //! println!("Package: {} v{}", pkg.name, pkg.version);
 //! ```
 

@@ -1,7 +1,7 @@
 //! Solar Starlark Interpreter
 //!
 //! This module provides the main interpreter for evaluating Starlark-based
-//! package definitions.
+//! package definitions using the starlark-rust parser.
 
 use crate::package::PackageDef;
 use crate::starlark_dialect::StarlarkParser;
@@ -36,9 +36,20 @@ impl SolarSuite {
 
     /// Parse and evaluate Starlark content
     pub fn parse_content(&self, content: &str, filepath: &str) -> Result<PackageDef, SolarSuiteError> {
-        // Parse using our Starlark parser
-        StarlarkParser::parse(content)
-            .map_err(|e| SolarSuiteError::ParseError(format!("{} in {}", e, filepath)))
+        // Parse using starlark-rust based parser
+        let ctx = StarlarkParser::parse(content, filepath)
+            .map_err(|e| SolarSuiteError::ParseError(e))?;
+
+        let pkg = ctx.into_package();
+
+        // Validate the package
+        if pkg.name.is_empty() || pkg.version.is_empty() {
+            return Err(SolarSuiteError::InvalidPackage(
+                "Package must have name and version".to_string()
+            ));
+        }
+
+        Ok(pkg)
     }
 }
 
@@ -114,5 +125,31 @@ make install
         assert!(pkg.prepare.is_some());
         assert!(pkg.build.is_some());
         assert!(pkg.package.is_some());
+    }
+
+    #[test]
+    fn test_parse_package_with_variable_syntax() {
+        let suite = SolarSuite::new().unwrap();
+        let content = r#"
+pkg("testpkg", "2.0.0")
+description = "A test package with variable syntax"
+homepage = "https://example.com"
+license = "Apache-2.0"
+depends(["libc"])
+
+build = """
+make build
+"""
+"#;
+        let result = suite.parse_content(content, "test.bazon");
+        assert!(result.is_ok());
+        let pkg = result.unwrap();
+        assert_eq!(pkg.name, "testpkg");
+        assert_eq!(pkg.version, "2.0.0");
+        assert_eq!(pkg.description, Some("A test package with variable syntax".to_string()));
+        assert_eq!(pkg.homepage, Some("https://example.com".to_string()));
+        assert_eq!(pkg.license, Some("Apache-2.0".to_string()));
+        assert_eq!(pkg.depends, vec!["libc"]);
+        assert!(pkg.build.is_some());
     }
 }

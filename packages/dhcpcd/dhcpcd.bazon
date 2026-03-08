@@ -1,8 +1,8 @@
 # dhcpcd package definition
 pkg("dhcpcd", "10.0.6")
-description("A lightweight, fast and RFC compliant DHCPv4/IPv6 client")
-homepage("https://roy.marples.name/projects/dhcpcd")
-license("ISC")
+description = "A lightweight, fast and RFC compliant DHCPv4/IPv6 client"
+homepage = "https://roy.marples.name/projects/dhcpcd"
+license = "ISC"
 arch(["x86_64", "aarch64", "i686"])
 depends(["glibc"])
 backup(["etc/dhcpcd.conf"])
