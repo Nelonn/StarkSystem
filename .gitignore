@@ -1,0 +1,15 @@
+/.gitdeps
+/build
+# CLion build directory
+/cmake-**
+build-wsl
+.vscode/
+.idea/
+venv/
+.venv/
+/third_party/external
+/.temp
+/target
+
+# Common
+.DS_Store
