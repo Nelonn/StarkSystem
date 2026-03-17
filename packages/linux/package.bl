@@ -1,0 +1,30 @@
+import solarsuite
+
+pkg({
+  name: "linux",
+  versions: ["6.7.0"],
+  description: "The Linux kernel and modules",
+  homepage: "https://kernel.org/",
+  licenses: ["GPL-2.0-only"],
+  arch: ["x86_64", "aarch64"],
+  native_depends: ["make", "perl", "flex", "bison"],
+  build: (inputs: BuildInputs, outputs: BuildOutputs) {
+    let source = "https://cdn.kernel.org/pub/linux/kernel/v${inputs.version.split(".")[0]}.x/linux-${inputs.version}.tar.xz"
+
+    outputs.prepare = """
+      cd linux-6.7.0
+      cp /boot/config-$(uname -r) .config 2>/dev/null || make defconfig
+    """
+
+    outputs.build = """
+      cd linux-6.7.0
+      make -j$(nproc) bzImage modules
+    """
+
+    outputs.package = """
+      cd linux-6.7.0
+      make modules_install INSTALL_MOD_PATH="$pkgdir"
+      cp arch/x86/boot/bzImage "$pkgdir/boot/vmlinuz-linux"
+    """
+  }
+})

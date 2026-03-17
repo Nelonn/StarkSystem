@@ -1,0 +1,18 @@
+module solarsuite
+
+class PackageConfig {
+  name: str
+  versions: str[]
+  description: str?
+  homepage: str?
+  licenses: str[]
+  arch: str[]
+  native_depends: str[]
+  // TODO: `build` field
+}
+
+// TODO: packages hash map
+
+fn pkg(config: PackageConfig) {
+
+}
