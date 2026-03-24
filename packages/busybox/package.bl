@@ -20,12 +20,12 @@ pkg({
 
     outputs.build = """
       cd busybox-${ver_tag}
-      make -j$(nproc)
+      make -j${inputs.nproc}
     """
 
     outputs.package = """
       cd busybox-${ver_tag}
-      make CONFIG_PREFIX="${pkgdir]" install
+      make CONFIG_PREFIX="${inputs.pkgdir}" install
     """
   }
 })

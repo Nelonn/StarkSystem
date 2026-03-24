@@ -8,7 +8,19 @@ class PackageConfig {
   licenses: str[]
   arch: str[]
   native_depends: str[]
-  // TODO: `build` field
+  build: (BuildInputs, BuildOutputs)
+}
+
+class BuildInputs {
+  version: str
+  pkgdir: str
+  nproc: int = 1
+}
+
+class BuildOutputs {
+  prepare: str?
+  build: str?
+  package: str?
 }
 
 // TODO: packages hash map
