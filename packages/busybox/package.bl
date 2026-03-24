@@ -1,0 +1,31 @@
+import solarsuite
+
+pkg({
+  name: "busybox",
+  versions: ["1.37.0"],
+  description: "The Swiss Army Knife of Embedded Linux",
+  homepage: "https://busybox.net/",
+  licenses: ["GPL-2.0-only"],
+  arch: ["x86_64", "aarch64"],
+  native_depends: ["make"],
+  build: (inputs: BuildInputs, outputs: BuildOutputs) {
+    let ver_tag = inputs.version.replaceAll(".", "_")
+    let source = "https://git.busybox.net/busybox/snapshot/busybox-${ver_tag}.tar.bz2"
+
+    outputs.prepare = """
+      cd busybox-${ver_tag}
+      make defconfig
+      sed -i 's/CONFIG_FEATURE_EDITING_VI=y/CONFIG_FEATURE_EDITING_VI=n/' .config
+    """
+
+    outputs.build = """
+      cd busybox-${ver_tag}
+      make -j$(nproc)
+    """
+
+    outputs.package = """
+      cd busybox-${ver_tag}
+      make CONFIG_PREFIX="${pkgdir]" install
+    """
+  }
+})
