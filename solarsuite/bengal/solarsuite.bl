@@ -28,3 +28,18 @@ class BuildOutputs {
 fn pkg(config: PackageConfig) {
 
 }
+
+fn fetchurl(
+  url: str,
+  hash: str? = null,
+): str? {
+
+}
+
+fn fetchzip(
+  url: str,
+  strip_root: bool = true,
+  hash: str? = null,
+): str? {
+  let path = fetchurl(url: url, hash: hash)
+}
